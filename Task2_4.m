@@ -57,8 +57,6 @@ showMatchedFeatures(img1, img2, matchedPts1, matchedPts2, "montag");
 
 
 
-
-
 % Estimate the homography transformation 
 tform = estgeotform2d(matchedPts1, matchedPts2, 'projective');
 
@@ -69,3 +67,29 @@ outputImage = imwarp(img1, tform);
 % Display the registered images side by side
 figure;
 imshowpair(outputImage, img2, 'montage');
+
+
+% Estimate the fundamental matrix
+F = estimateFundamentalMatrix(matchedPts1, matchedPts2);
+
+% Compute the epipolar lines in image 2
+lines2 = epipolarLine(F', matchedPts1.Location);
+
+% Compute the epipolar lines in image 1
+lines1 = epipolarLine(F, matchedPts2.Location);
+
+% Display the epipolar lines in image 1
+figure;
+imshow(img1);
+hold on;
+line([matchedPts1.Location(:,1)'; matchedPts1.Location(:,1)'], [matchedPts1.Location(:,2)'; matchedPts1.Location(:,2)'], 'Color', 'r');
+line([matchedPts1.Location(:,1)'; lines1(:,1)'], [matchedPts1.Location(:,2)'; lines1(:,2)'], 'Color', 'r');
+hold off;
+
+% Display the epipolar lines in image 2
+figure;
+imshow(img2);
+hold on;
+line([matchedPts2.Location(:,1)'; matchedPts2.Location(:,1)'], [matchedPts2.Location(:,2)'; matchedPts2.Location(:,2)'], 'Color', 'r');
+line([matchedPts2.Location(:,1)'; lines2(:,1)'], [matchedPts2.Location(:,2)'; lines2(:,2)'], 'Color', 'r');
+hold off;
