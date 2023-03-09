@@ -1,4 +1,4 @@
-% Find camera calibration parameters using the Camera Calibration Toolbox for Matlab
+% Load images
 numImages = 5;
 files = cell(1, numImages);
 for i = 1:numImages
