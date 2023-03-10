@@ -9,7 +9,7 @@ end
 
 % Display one of the calibration images
 % magnification = 25;
-% I = imread(files{1});
+I = imread(files{1});
 % figure(1);
 % imshow(I);
 % title("One of the Calibration Images");

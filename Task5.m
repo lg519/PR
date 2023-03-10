@@ -27,10 +27,20 @@ matchedPts2_Fun = validPts2_Fun(indexPairs_Fun(:, 2));
 % Visualize the matched feature points
 figure;
 showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun, matchedPts2_Fun, "montag");
+title("Matched Points (Including Outliers)");
 
 
 % Estimate the fundamental matrix
 [F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun);
+
+% get the number of inliers
+numInliers = sum(inliersIndex);
+
+% get the number of outliers
+numOutliers = size(matchedPts1_Fun,1) - numInliers;
+
+% print the number of inliers and outliers
+fprintf('Number of inliers: %d , Number of outliers: %d \n', numInliers, numOutliers);
 
 
 % ESTIMATE STEREO RECTIFICATION
@@ -38,12 +48,25 @@ showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun, matchedPts2_Fun, "monta
 
 % estimate uncalibrated rectification
 
-[tform1,tform2] = estimateStereoRectification(F,matchedPts1_Fun(inliersIndex),matchedPts2_Fun(inliersIndex), size(img1_Fun))
+inlierPoints1 = matchedPts1_Fun(inliersIndex, :);
+inlierPoints2 = matchedPts2_Fun(inliersIndex, :);
+
+% visualize the inliers
+figure;
+showMatchedFeatures(img1_Fun, img2_Fun, inlierPoints1, inlierPoints2);
+title("Matched Points (Inliers Only)");
+
+[tform1,tform2] = estimateStereoRectification(F,inlierPoints1.Location,inlierPoints2.Location, [size(img1_Fun, 1), size(img1_Fun, 2)])
 
 [img1_Fun_rect, img2_Fun_rect] = rectifyStereoImages(img1_Fun, img2_Fun, tform1, tform2);
 
-% plot the rectified images
-figure;
-imshowpair(img1_Fun_rect, img2_Fun_rect, 'montage');
+imshow(stereoAnaglyph(img1_Fun_rect,img2_Fun_rect));
+title("Rectified Stereo Images (Red - Left Image, Cyan - Right Image)");
+
+% calculate epipolar lines
+
+
+
+% ESTIMATE CALIBRATED RECTIFICATION, USING THE CALIBRATION MATRIX (THIS SHOULD FIX THE NARROW IMAGE PROBLEM)
 
 
