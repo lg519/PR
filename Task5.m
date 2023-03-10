@@ -6,8 +6,8 @@ for i = 1:numImages_Fun
 end
 
 % Load the two images to match
-img1_Fun = imread(files_Fun{1});
-img2_Fun = imread(files_Fun{2});
+img1_Fun = imread(files_Fun{3});
+img2_Fun = imread(files_Fun{4});
 
 % Detect features in both images
 pts1_Fun = detectSIFTFeatures(rgb2gray(img1_Fun));
@@ -60,8 +60,12 @@ title("Matched Points (Inliers Only)");
 
 [img1_Fun_rect, img2_Fun_rect] = rectifyStereoImages(img1_Fun, img2_Fun, tform1, tform2);
 
-imshow(stereoAnaglyph(img1_Fun_rect,img2_Fun_rect));
-title("Rectified Stereo Images (Red - Left Image, Cyan - Right Image)");
+
+% visualize the rectified images
+figure;
+imshowpair(img1_Fun_rect, img2_Fun_rect, 'montage');
+title("Rectified Images");
+
 
 % calculate epipolar lines
 
