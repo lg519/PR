@@ -88,7 +88,7 @@ end
 
 % Load the two images to match
 img1_Fun = imread(files_Fun{1});
-img2_Fun = imread(files_Fun{2});
+img2_Fun = imread(files_Fun{3});
 
 % Detect features in both images
 pts1_Fun = detectSIFTFeatures(rgb2gray(img1_Fun));
@@ -111,7 +111,7 @@ showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun, matchedPts2_Fun, "monta
 
 
 % Estimate the fundamental matrix
-[F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun,Method="RANSAC", NumTrials=4000, DistanceThreshold=1);
+[F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun);
 
 % get the number of inliers
 numInliers = sum(inliersIndex);
@@ -148,6 +148,7 @@ epilines = epipolarLine(F,matchedPts1_Fun.Location);
 points = lineToBorderPoints(epilines,size(img2_Fun));
 
 line(points(:,[1,3])',points(:,[2,4])');
+
 
 
 
