@@ -88,11 +88,11 @@ end
 
 % Load the two images to match
 img1_Fun = imread(files_Fun{1});
-img2_Fun = imread(files_Fun{4});
+img2_Fun = imread(files_Fun{2});
 
 % Detect features in both images
-pts1_Fun = detectSURFFeatures(rgb2gray(img1_Fun));
-pts2_Fun = detectSURFFeatures(rgb2gray(img2_Fun));
+pts1_Fun = detectSIFTFeatures(rgb2gray(img1_Fun));
+pts2_Fun = detectSIFTFeatures(rgb2gray(img2_Fun));
 
 % Extract feature descriptors for the detected features
 [features1_Fun, validPts1_Fun] = extractFeatures(rgb2gray(img1_Fun), pts1_Fun);
@@ -111,7 +111,7 @@ showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun, matchedPts2_Fun, "monta
 
 
 % Estimate the fundamental matrix
-[F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun,Method="RANSAC", NumTrials=2000, DistanceThreshold=100);
+[F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun,Method="RANSAC", NumTrials=4000, DistanceThreshold=1);
 
 % get the number of inliers
 numInliers = sum(inliersIndex);
@@ -124,36 +124,81 @@ fprintf('Number of inliers: %d , Number of outliers: %d \n', numInliers, numOutl
 
 
 
-% Calculate the epipolar lines
-lines1_Fun = epipolarLine(F', matchedPts2_Fun.Location);
-lines2_Fun = epipolarLine(F, matchedPts1_Fun.Location);
-
-% Find the endpoints of the epipolar lines
-points1_Fun = lineToBorderPoints(lines1_Fun, size(img1_Fun));
-points2_Fun = lineToBorderPoints(lines2_Fun, size(img2_Fun));
-
-% Display the image with the epipolar lines
+% Show the inliers in the first image
 figure;
+subplot(1,2,1);
 imshow(img1_Fun);
 hold on;
-line(points1_Fun(:, [1,3])', points1_Fun(:, [2,4])');
-title('Epipolar lines in image 1');
+title('Inliers and Epipolar Lines in First Image');
+plot(matchedPts1_Fun.Location(inliersIndex,1),matchedPts1_Fun.Location(inliersIndex,2),'go');
 
-% Display the image with the epipolar lines
-figure;
+epilines = epipolarLine(F',matchedPts2_Fun.Location);
+% points = lineToBorderPoints(epilines,size(img1_Fun));
+
+%line(points(:,[1,3])',points(:,[2,4])');
+
+% Show the inliers in the second image
+subplot(1,2,2);
 imshow(img2_Fun);
 hold on;
-line(points2_Fun(:, [1,3])', points2_Fun(:, [2,4])');
-title('Epipolar lines in image 2');
+title('Inliers and Epipolar Lines in Second Image');
+plot(matchedPts2_Fun.Location(inliersIndex,1),matchedPts2_Fun.Location(inliersIndex,2),'go');
 
-% Display the inliers and outliers
-figure;
-showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun(inliersIndex), matchedPts2_Fun(inliersIndex), "montage");
-title('Inliers');
+epilines = epipolarLine(F,matchedPts1_Fun.Location);
+points = lineToBorderPoints(epilines,size(img2_Fun));
 
-figure;
-showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun(~inliersIndex), matchedPts2_Fun(~inliersIndex), "montage");
-title('Outliers');
+line(points(:,[1,3])',points(:,[2,4])');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% % Calculate the epipolar lines
+% lines1_Fun = epipolarLine(F', matchedPts2_Fun.Location);
+% lines2_Fun = epipolarLine(F, matchedPts1_Fun.Location);
+
+% % Find the endpoints of the epipolar lines
+% points1_Fun = lineToBorderPoints(lines1_Fun, size(img1_Fun));
+% points2_Fun = lineToBorderPoints(lines2_Fun, size(img2_Fun));
+
+% % Display the image with the epipolar lines
+% figure;
+% imshow(img1_Fun);
+% hold on;
+% line(points1_Fun(:, [1,3])', points1_Fun(:, [2,4])');
+% title('Epipolar lines in image 1');
+
+% % Display the image with the epipolar lines
+% figure;
+% imshow(img2_Fun);
+% hold on;
+% line(points2_Fun(:, [1,3])', points2_Fun(:, [2,4])');
+% title('Epipolar lines in image 2');
+
+% % Display the inliers and outliers
+% figure;
+% showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun(inliersIndex), matchedPts2_Fun(inliersIndex), "montage");
+% title('Inliers');
+
+% figure;
+% showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun(~inliersIndex), matchedPts2_Fun(~inliersIndex), "montage");
+% title('Outliers');
 
 
 
@@ -166,7 +211,6 @@ title('Outliers');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TASK 5 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 
 
