@@ -25,50 +25,52 @@ close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TASK 4.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+rng(0);
 
-% numImages_hom = 5;
-% files_hom = cell(1, numImages_hom);
-% for i = 1:2
+
+numImages_hom = 5;
+files_hom = cell(1, numImages_hom);
+for i = 1:2
     
-%     files_hom{i} = fullfile('CV_pictures','Test_rotation',strcat('object_',num2str(i),'.JPG'));
+    files_hom{i} = fullfile('CV_pictures','Test_rotation',strcat('object_',num2str(i),'.JPG'));
     
-% end
+end
 
-% % Load the two images to match
-% img1_hom = imread(files_hom{1});
-% img2_hom = imread(files_hom{2});
+% Load the two images to match
+img1_hom = imread(files_hom{1});
+img2_hom = imread(files_hom{2});
 
-% % Detect features in both images
-% pts1_hom = detectSIFTFeatures(rgb2gray(img1_hom));
-% pts2_hom = detectSIFTFeatures(rgb2gray(img2_hom));
+% Detect features in both images
+pts1_hom = detectSIFTFeatures(rgb2gray(img1_hom));
+pts2_hom = detectSIFTFeatures(rgb2gray(img2_hom));
 
-% % Extract feature descriptors for the detected features
-% [features1_hom, validPts1_hom] = extractFeatures(rgb2gray(img1_hom), pts1_hom);
-% [features2_hom, validPts2_hom] = extractFeatures(rgb2gray(img2_hom), pts2_hom);
+% Extract feature descriptors for the detected features
+[features1_hom, validPts1_hom] = extractFeatures(rgb2gray(img1_hom), pts1_hom);
+[features2_hom, validPts2_hom] = extractFeatures(rgb2gray(img2_hom), pts2_hom);
 
-% % Match the feature descriptors between the two images
-% indexPairs_hom = matchFeatures(features1_hom, features2_hom);
+% Match the feature descriptors between the two images
+indexPairs_hom = matchFeatures(features1_hom, features2_hom);
 
-% % Retrieve the matched feature points
-% matchedPts1_hom = validPts1_hom(indexPairs_hom(:, 1));
-% matchedPts2_hom = validPts2_hom(indexPairs_hom(:, 2));
+% Retrieve the matched feature points
+matchedPts1_hom = validPts1_hom(indexPairs_hom(:, 1));
+matchedPts2_hom = validPts2_hom(indexPairs_hom(:, 2));
 
-% % Visualize the matched feature points
-% figure;
-% showMatchedFeatures(img1_hom, img2_hom, matchedPts1_hom, matchedPts2_hom, "montag");
-
-
-
-% % Estimate the homography transformation 
-% tform = estgeotform2d(matchedPts1_hom, matchedPts2_hom, 'projective');
+% Visualize the matched feature points
+figure;
+showMatchedFeatures(img1_hom, img2_hom, matchedPts1_hom, matchedPts2_hom, "montag");
 
 
-% % Apply the transformation to image1
-% outputImage = imwarp(img1_hom, tform);
 
-% % Display the registered images side by side
-% figure;
-% imshowpair(outputImage, img2_hom, 'montage');
+% Estimate the homography transformation 
+tform = estgeotform2d(matchedPts1_hom, matchedPts2_hom, 'projective');
+
+
+% Apply the transformation to image1
+outputImage = imwarp(img1_hom, tform);
+
+% Display the registered images side by side
+figure;
+imshowpair(outputImage, img2_hom, 'montage');
 
 
 

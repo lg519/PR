@@ -1,13 +1,18 @@
+rng(1);
+
 numImages_Fun = 5;
 files_Fun = cell(1, numImages_Fun);
 for i = 1:numImages_Fun
-    files_Fun{i} = fullfile('CV_pictures','Task1a_with_object',strcat('object_',num2str(i),'.JPG'));
+    files_Fun{i} = fullfile('CV_pictures','FD',strcat('object_',num2str(i),'.JPG'));
     
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% KEYPOINT MATCHING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Load the two images to match
-img1_Fun = imread(files_Fun{3});
-img2_Fun = imread(files_Fun{4});
+img1_Fun = imread(files_Fun{1});
+img2_Fun = imread(files_Fun{5});
 
 % Detect features in both images
 pts1_Fun = detectSIFTFeatures(rgb2gray(img1_Fun));
@@ -27,11 +32,31 @@ matchedPts2_Fun = validPts2_Fun(indexPairs_Fun(:, 2));
 % Visualize the matched feature points
 figure;
 showMatchedFeatures(img1_Fun, img2_Fun, matchedPts1_Fun, matchedPts2_Fun, "montag");
-title("Matched Points (Including Outliers)");
+title("Matched Points (Including Outliers) no rectification");
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RECTIFICATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % Estimate the fundamental matrix
-[F,inliersIndex] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun);
+[F,inliersIndex,status] = estimateFundamentalMatrix(matchedPts1_Fun, matchedPts2_Fun);
+
+
+if status ~= 0 || isEpipoleInImage(F,size(img1_Fun)) ...
+  || isEpipoleInImage(F',size(img2_Fun))
+  error(["Not enough matching points were found or "...
+         "the epipoles are inside the images. Inspect "...
+         "and improve the quality of detected features ",...
+         "and images."]);
+end
+
 
 % get the number of inliers
 numInliers = sum(inliersIndex);
@@ -43,24 +68,34 @@ numOutliers = size(matchedPts1_Fun,1) - numInliers;
 fprintf('Number of inliers: %d , Number of outliers: %d \n', numInliers, numOutliers);
 
 
-% ESTIMATE STEREO RECTIFICATION
-% CAN DO IT IN TWO WASY: 1) USING THE CALIBRATION MATRIX 2) NOT USING THE CALIBRATION MATRIX
-
 % estimate uncalibrated rectification
-
 inlierPoints1 = matchedPts1_Fun(inliersIndex, :);
 inlierPoints2 = matchedPts2_Fun(inliersIndex, :);
 
 % visualize the inliers
 figure;
 showMatchedFeatures(img1_Fun, img2_Fun, inlierPoints1, inlierPoints2);
-title("Matched Points (Inliers Only)");
+title("Matched Points (Inliers Only) no rectification");
 
 [tform1,tform2] = estimateStereoRectification(F,inlierPoints1.Location,inlierPoints2.Location, [size(img1_Fun, 1), size(img1_Fun, 2)])
 
 [img1_Fun_rect, img2_Fun_rect] = rectifyStereoImages(img1_Fun, img2_Fun, tform1, tform2);
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% KEYPOINT MATCHING IN RECTIFIED IMAGES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % Detect features in both images
@@ -81,21 +116,34 @@ matchedPts2_Fun_rect = validPts2_Fun_rect(indexPairs_Fun_rect(:, 2));
 % Visualize the matched feature points
 figure;
 showMatchedFeatures(img1_Fun_rect, img2_Fun_rect, matchedPts1_Fun_rect, matchedPts2_Fun_rect, "montag");
-title("Matched Points (Including Outliers)");
+title("Matched Points (Including Outliers) with rectification");
 
 
 % Estimate the fundamental matrix
-[F_rect,inliersIndex_rect] = estimateFundamentalMatrix(matchedPts1_Fun_rect, matchedPts2_Fun_rect);
+[F_rect,inliersIndex_rect,status] = estimateFundamentalMatrix(matchedPts1_Fun_rect, matchedPts2_Fun_rect);
 
-% Show the inliers in the first image
+if status ~= 0 || isEpipoleInImage(F_rect,size(img1_Fun_rect)) ...
+  || isEpipoleInImage(F_rect',size(img2_Fun_rect))
+  error(["Not enough matching points were found or "...
+         "the epipoles are inside the images. Inspect "...
+         "and improve the quality of detected features ",...
+         "and images."]);
+end
+
+
+inlierPoints1_rect = matchedPts1_Fun_rect(inliersIndex_rect, :);
+inlierPoints2_rect = matchedPts2_Fun_rect(inliersIndex_rect, :);
+
+
+% Show the rectified images with the epipolar lines
 figure;
 subplot(1,2,1);
 imshow(img1_Fun_rect);
 hold on;
 title('Inliers and Epipolar Lines in First Image');
-plot(matchedPts1_Fun_rect.Location(inliersIndex_rect,1),matchedPts1_Fun_rect.Location(inliersIndex_rect,2),'go');
+plot(inlierPoints1_rect.Location(:,1),inlierPoints1_rect.Location(:,2),'go');
 
-epilines = epipolarLine(F_rect',matchedPts2_Fun_rect.Location);
+epilines = epipolarLine(F_rect',inlierPoints2_rect.Location);
 points = lineToBorderPoints(epilines,size(img1_Fun_rect));
 
 line(points(:,[1,3])',points(:,[2,4])');
@@ -106,12 +154,70 @@ imshow(img2_Fun_rect);
 hold on;
 
 title('Inliers and Epipolar Lines in Second Image');
-plot(matchedPts2_Fun_rect.Location(inliersIndex_rect,1),matchedPts2_Fun_rect.Location(inliersIndex_rect,2),'go');
+plot(inlierPoints2_rect.Location(:,1),inlierPoints2_rect.Location(:,2),'go');
 
-epilines = epipolarLine(F_rect,matchedPts1_Fun_rect.Location);
+epilines = epipolarLine(F_rect,inlierPoints1_rect.Location);
 points = lineToBorderPoints(epilines,size(img2_Fun_rect));
 
 line(points(:,[1,3])',points(:,[2,4])');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Show the inliers in the first image
+% figure;
+% subplot(1,2,1);
+% imshow(img1_Fun_rect);
+% hold on;
+% title('Inliers and Epipolar Lines in First Image');
+% plot(matchedPts1_Fun_rect.Location(inliersIndex_rect,1),matchedPts1_Fun_rect.Location(inliersIndex_rect,2),'go');
+
+% epilines = epipolarLine(F_rect',matchedPts2_Fun_rect.Location);
+% points = lineToBorderPoints(epilines,size(img1_Fun_rect));
+
+% line(points(:,[1,3])',points(:,[2,4])');
+
+% % Show the inliers in the second image
+% subplot(1,2,2);
+% imshow(img2_Fun_rect);
+% hold on;
+
+% title('Inliers and Epipolar Lines in Second Image');
+% plot(matchedPts2_Fun_rect.Location(inliersIndex_rect,1),matchedPts2_Fun_rect.Location(inliersIndex_rect,2),'go');
+
+% epilines = epipolarLine(F_rect,matchedPts1_Fun_rect.Location);
+% points = lineToBorderPoints(epilines,size(img2_Fun_rect));
+
+% line(points(:,[1,3])',points(:,[2,4])');
+
+% hold off;
+
+
+
+
+% Show the disparity map
+% figure;
+% disparityMap = disparity(rgb2gray(img1_Fun_rect), rgb2gray(img2_Fun_rect));
+% imshow(disparityMap, [0, 64]);
+% title('Disparity Map');
+% colormap jet
+% colorbar
+
+
 
 
 
