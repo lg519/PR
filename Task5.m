@@ -161,9 +161,29 @@ points = lineToBorderPoints(epilines,size(img2_Fun_rect));
 
 line(points(:,[1,3])',points(:,[2,4])');
 
+hold off;
 
 
 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+% Visualize the disparity map
+figure;
+% Estimate the depth map
+disparityRange = [-64 64];
+disparityMap = disparitySGM(rgb2gray(img1_Fun_rect),rgb2gray(img2_Fun_rect),'DisparityRange',disparityRange,'UniquenessThreshold',20);
+hold on;
+imshow(disparityMap,disparityRange);
+title('Disparity Map');
+hold on;
+colormap jet;
+hold on;
+colorbar;
 
 
 
