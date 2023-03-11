@@ -12,7 +12,7 @@ end
 
 % Load the two images to match
 img1_Fun = imread(files_Fun{1});
-img2_Fun = imread(files_Fun{5});
+img2_Fun = imread(files_Fun{4});
 
 % Detect features in both images
 pts1_Fun = detectSIFTFeatures(rgb2gray(img1_Fun));
