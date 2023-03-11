@@ -61,10 +61,107 @@ title("Matched Points (Inliers Only)");
 [img1_Fun_rect, img2_Fun_rect] = rectifyStereoImages(img1_Fun, img2_Fun, tform1, tform2);
 
 
-% visualize the rectified images
+
+
+% Detect features in both images
+pts1_Fun_rect = detectSIFTFeatures(rgb2gray(img1_Fun_rect));
+pts2_Fun_rect = detectSIFTFeatures(rgb2gray(img2_Fun_rect));
+
+% Extract feature descriptors for the detected features
+[features1_Fun_rect, validPts1_Fun_rect] = extractFeatures(rgb2gray(img1_Fun_rect), pts1_Fun_rect);
+[features2_Fun_rect, validPts2_Fun_rect] = extractFeatures(rgb2gray(img2_Fun_rect), pts2_Fun_rect);
+
+% Match the feature descriptors between the two images
+indexPairs_Fun_rect = matchFeatures(features1_Fun_rect, features2_Fun_rect);
+
+% Retrieve the matched feature points
+matchedPts1_Fun_rect = validPts1_Fun_rect(indexPairs_Fun_rect(:, 1));
+matchedPts2_Fun_rect = validPts2_Fun_rect(indexPairs_Fun_rect(:, 2));
+
+% Visualize the matched feature points
 figure;
-imshowpair(img1_Fun_rect, img2_Fun_rect, 'montage');
-title("Rectified Images");
+showMatchedFeatures(img1_Fun_rect, img2_Fun_rect, matchedPts1_Fun_rect, matchedPts2_Fun_rect, "montag");
+title("Matched Points (Including Outliers)");
+
+
+% Estimate the fundamental matrix
+[F_rect,inliersIndex_rect] = estimateFundamentalMatrix(matchedPts1_Fun_rect, matchedPts2_Fun_rect);
+
+% Show the inliers in the first image
+figure;
+subplot(1,2,1);
+imshow(img1_Fun_rect);
+hold on;
+title('Inliers and Epipolar Lines in First Image');
+plot(matchedPts1_Fun_rect.Location(inliersIndex_rect,1),matchedPts1_Fun_rect.Location(inliersIndex_rect,2),'go');
+
+epilines = epipolarLine(F_rect',matchedPts2_Fun_rect.Location);
+points = lineToBorderPoints(epilines,size(img1_Fun_rect));
+
+line(points(:,[1,3])',points(:,[2,4])');
+
+% Show the inliers in the second image
+subplot(1,2,2);
+imshow(img2_Fun_rect);
+hold on;
+
+title('Inliers and Epipolar Lines in Second Image');
+plot(matchedPts2_Fun_rect.Location(inliersIndex_rect,1),matchedPts2_Fun_rect.Location(inliersIndex_rect,2),'go');
+
+epilines = epipolarLine(F_rect,matchedPts1_Fun_rect.Location);
+points = lineToBorderPoints(epilines,size(img2_Fun_rect));
+
+line(points(:,[1,3])',points(:,[2,4])');
+
+
+
+
+
+% Show the inliers in the first image
+% figure;
+% subplot(1,2,1);
+% imshow(img1_Fun);
+% hold on;
+% title('Inliers and Epipolar Lines in First Image');
+% plot(matchedPts1_Fun.Location(inliersIndex,1),matchedPts1_Fun.Location(inliersIndex,2),'go');
+
+% epilines = epipolarLine(F',matchedPts2_Fun.Location);
+% % points = lineToBorderPoints(epilines,size(img1_Fun));
+
+% %line(points(:,[1,3])',points(:,[2,4])');
+
+% % Show the inliers in the second image
+% subplot(1,2,2);
+% imshow(img2_Fun);
+% hold on;
+% title('Inliers and Epipolar Lines in Second Image');
+% plot(matchedPts2_Fun.Location(inliersIndex,1),matchedPts2_Fun.Location(inliersIndex,2),'go');
+
+% epilines = epipolarLine(F,matchedPts1_Fun.Location);
+% points = lineToBorderPoints(epilines,size(img2_Fun));
+
+% line(points(:,[1,3])',points(:,[2,4])');
+
+
+
+
+
+
+
+% visualize the rectified images
+% figure;
+% imshowpair(img1_Fun_rect, img2_Fun_rect, 'montage');
+% title("Rectified Images");
+
+
+
+
+
+
+% calculate the disparity map
+
+
+
 
 
 % calculate epipolar lines
